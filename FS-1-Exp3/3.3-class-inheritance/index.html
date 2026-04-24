@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exp 3.3 - Class Inheritance</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #f7f7f7;
+            font-family: Arial, sans-serif;
+            color: #333;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 28px;
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #222;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .btn {
+            padding: 8px 18px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: white;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: #333;
+        }
+
+        .btn:hover { background: #f0f0f0; }
+
+        .btn-student { border-color: #4f7ef8; color: #4f7ef8; }
+        .btn-teacher { border-color: #e06b3b; color: #e06b3b; }
+
+        .card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-left: 4px solid #ccc;
+            border-radius: 6px;
+            padding: 14px 18px;
+            margin-bottom: 10px;
+        }
+
+        .card.student { border-left-color: #4f7ef8; }
+        .card.teacher { border-left-color: #e06b3b; }
+
+        .card .tag {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #999;
+            margin-bottom: 4px;
+        }
+
+        .card .name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 2px;
+        }
+
+        .card .info {
+            font-size: 0.875rem;
+            color: #555;
+        }
+
+        #empty {
+            color: #aaa;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 40px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>OOP — Class Inheritance &amp; Polymorphism</h1>
+            <p>Class hierarchy: Person → Student / Teacher</p>
+        </header>
+
+        <div class="controls">
+            <button class="btn btn-student" onclick="addInstance('Student')">+ Add Student</button>
+            <button class="btn btn-teacher" onclick="addInstance('Teacher')">+ Add Teacher</button>
+            <button class="btn" onclick="clearAll()" style="margin-left:auto;">Clear</button>
+        </div>
+
+        <div id="displayArea">
+            <div id="empty">No instances yet. Add a student or teacher above.</div>
+        </div>
+    </div>
+
+    <script>
+        class Person {
+            constructor(name, age) {
+                this.name = name;
+                this.age = age;
+            }
+            getInfo() { return `Person: ${this.name}, ${this.age} years old.`; }
+        }
+
+        class Student extends Person {
+            constructor(name, age, gpa) {
+                super(name, age);
+                this.gpa = gpa;
+            }
+            getInfo() { return `Enrolled student — GPA: ${this.gpa}`; }
+        }
+
+        class Teacher extends Person {
+            constructor(name, age, subject) {
+                super(name, age);
+                this.subject = subject;
+            }
+            getInfo() { return `Teacher — Subject: ${this.subject}`; }
+        }
+
+        const names = ["Aarush", "Dev", "Isha", "Rahul", "Aisha", "Priya", "Arjun"];
+        const subjects = ["Mathematics", "Physics", "Computer Science", "English", "Chemistry"];
+        const instances = [];
+
+        function addInstance(type) {
+            const name = names[Math.floor(Math.random() * names.length)];
+            const age = Math.floor(Math.random() * 15) + 20;
+            let obj;
+            if (type === 'Student') {
+                obj = new Student(name, age, (Math.random() + 3).toFixed(2));
+            } else {
+                obj = new Teacher(name, age, subjects[Math.floor(Math.random() * subjects.length)]);
+            }
+            instances.unshift({ type, name, age, info: obj.getInfo() });
+            render();
+        }
+
+        function clearAll() {
+            instances.length = 0;
+            render();
+        }
+
+        function render() {
+            const area = document.getElementById('displayArea');
+            if (instances.length === 0) {
+                area.innerHTML = '<div id="empty">No instances yet. Add a student or teacher above.</div>';
+                return;
+            }
+            area.innerHTML = instances.map(i => `
+                <div class="card ${i.type.toLowerCase()}">
+                    <div class="tag">${i.type}</div>
+                    <div class="name">${i.name} <span style="font-weight:400;color:#888;font-size:0.85rem;">Age ${i.age}</span></div>
+                    <div class="info">${i.info}</div>
+                </div>
+            `).join('');
+        }
+
+        addInstance('Student');
+        addInstance('Teacher');
+    </script>
+</body>
+</html>

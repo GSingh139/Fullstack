@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Responsive Banking Interface</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+    <div class="bank-card">
+        <h1>My Bank</h1>
+
+        <div class="balance-box">
+            <h2>Current Balance</h2>
+            <div class="balance">₹ <span id="balance">1000</span></div>
+        </div>
+
+        <div class="transaction-box">
+            <div class="transaction deposit">
+                <h3>Deposit</h3>
+                <input type="number" id="depositAmount" placeholder="Enter amount">
+                <button onclick="deposit()">Deposit</button>
+            </div>
+
+            <div class="transaction withdraw">
+                <h3>Withdraw</h3>
+                <input type="number" id="withdrawAmount" placeholder="Enter amount">
+                <button onclick="withdraw()">Withdraw</button>
+            </div>
+        </div>
+
+        <div class="message" id="message"></div>
+    </div>
+</div>
+
+<script>
+    let balance = 1000;
+
+    function updateBalance() {
+        document.getElementById("balance").innerText = balance;
+    }
+
+    function showMessage(text, color) {
+        const msg = document.getElementById("message");
+        msg.innerText = text;
+        msg.style.color = color;
+    }
+
+    function deposit() {
+        const amount = parseFloat(document.getElementById("depositAmount").value);
+
+        if (isNaN(amount) || amount <= 0) {
+            showMessage("Please enter a valid deposit amount.", "red");
+            return;
+        }
+
+        balance += amount;
+        updateBalance();
+        showMessage("Deposit successful!", "green");
+        document.getElementById("depositAmount").value = "";
+    }
+
+    function withdraw() {
+        const amount = parseFloat(document.getElementById("withdrawAmount").value);
+
+        if (isNaN(amount) || amount <= 0) {
+            showMessage("Please enter a valid withdrawal amount.", "red");
+            return;
+        }
+
+        if (amount > balance) {
+            showMessage("Insufficient balance!", "red");
+            return;
+        }
+
+        balance -= amount;
+        updateBalance();
+        showMessage("Withdrawal successful!", "green");
+        document.getElementById("withdrawAmount").value = "";
+    }
+</script>
+
+</body>
+</html>

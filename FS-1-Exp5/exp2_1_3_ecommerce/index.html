@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 5.3 - E-commerce Catalog</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #f7f7f7;
+            font-family: Arial, sans-serif;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: #fff;
+            border-right: 1px solid #ddd;
+            padding: 28px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar h1 { font-size: 1.1rem; font-weight: 700; color: #222; }
+        .sidebar p { font-size: 0.85rem; color: #888; margin-top: 2px; }
+
+        .section-title {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 0.875rem;
+            color: #333;
+        }
+        .input-field:focus { outline: none; border-color: #4f7ef8; }
+
+        .cart-box {
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 14px;
+            text-align: center;
+        }
+        .cart-count { font-size: 1.4rem; font-weight: 700; color: #222; }
+        .cart-label { font-size: 0.78rem; color: #888; margin-top: 2px; }
+
+        .back-link {
+            margin-top: auto;
+            font-size: 0.85rem;
+            color: #4f7ef8;
+            text-decoration: none;
+        }
+        .back-link:hover { text-decoration: underline; }
+
+        .main { padding: 28px 32px; }
+
+        .main h2 { font-size: 1.1rem; font-weight: 700; color: #222; margin-bottom: 20px; }
+
+        .catalog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .product-card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .product-thumb {
+            height: 110px;
+            background: #f5f5f5;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+        }
+
+        .product-name { font-size: 0.95rem; font-weight: 700; color: #222; }
+        .product-price { font-size: 0.9rem; color: #4f7ef8; font-weight: 600; }
+
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 5px;
+            background: #4f7ef8;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
+        .btn:hover { background: #3a6ae0; }
+
+        .empty { color: #aaa; font-size: 0.9rem; padding: 40px 0; text-align: center; }
+
+        @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div>
+                <h1>Lab 5.3</h1>
+                <p>API Catalog Simulator</p>
+            </div>
+
+            <div>
+                <div class="section-title">Search</div>
+                <input type="text" id="filter" class="input-field" placeholder="Search products..." oninput="render()">
+            </div>
+
+            <div>
+                <div class="section-title">Cart</div>
+                <div class="cart-box">
+                    <div class="cart-count" id="cartCount">0</div>
+                    <div class="cart-label">items added</div>
+                </div>
+            </div>
+
+            <a href="../index.html" class="back-link">← Back to Hub</a>
+        </aside>
+
+        <main class="main">
+            <h2>Product Collection</h2>
+            <div id="catalog" class="catalog-grid"></div>
+        </main>
+    </div>
+
+    <script>
+        const catalog = [
+            { id: 1, name: "Premium Hoodie",   price: "1,299", icon: "👕" },
+            { id: 2, name: "Leather Wallet",    price: "799",   icon: "👜" },
+            { id: 3, name: "Sneaker X",         price: "2,499", icon: "👟" },
+            { id: 4, name: "Cotton Tee",        price: "499",   icon: "🧢" },
+            { id: 5, name: "Canvas Backpack",   price: "1,099", icon: "🎒" },
+            { id: 6, name: "Sport Watch",       price: "3,299", icon: "⌚" }
+        ];
+
+        let cart = 0;
+
+        function add() {
+            cart++;
+            document.getElementById('cartCount').textContent = cart;
+        }
+
+        function render() {
+            const query = document.getElementById('filter').value.toLowerCase();
+            const filtered = catalog.filter(p => p.name.toLowerCase().includes(query));
+            const grid = document.getElementById('catalog');
+            if (!filtered.length) {
+                grid.innerHTML = '<div class="empty">No products found.</div>';
+                return;
+            }
+            grid.innerHTML = filtered.map(p => `
+                <div class="product-card">
+                    <div class="product-thumb">${p.icon}</div>
+                    <div class="product-name">${p.name}</div>
+                    <div class="product-price">₹${p.price}</div>
+                    <button class="btn" onclick="add()">Add to Cart</button>
+                </div>
+            `).join('');
+        }
+
+        render();
+    </script>
+</body>
+</html>
