@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 9.1 — Docker Multi-Stage Build</title>
+    <link rel="stylesheet" href="../../lab.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        .stages {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+        .stage {
+            flex: 1;
+            min-width: 130px;
+            padding: 1.25rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.4s;
+            background: rgba(0,0,0,0.2);
+            color: var(--text-muted);
+        }
+        .stage.active {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(20, 184, 166, 0.08);
+        }
+        .stage.done {
+            border-color: var(--success);
+            color: var(--success);
+            background: rgba(34, 211, 160, 0.06);
+        }
+        .arrow { font-size: 1.4rem; color: var(--border); }
+    </style>
+</head>
+<body>
+    <div class="lab-layout">
+        <aside class="sidebar">
+            <div class="header">
+                <h1>Lab 9.1</h1>
+                <p>Docker Multi-Stage Build</p>
+            </div>
+            <div class="glass-card">
+                <h3 style="margin-bottom:1rem">Control Panel</h3>
+                <button class="btn" style="width:100%; margin-bottom:0.75rem" onclick="runBuild()">▶ Run Build</button>
+                <button class="btn" style="width:100%; background:rgba(255,255,255,0.08); color:var(--text)" onclick="resetBuild()">↺ Reset</button>
+                <p id="status" style="margin-top:1rem; font-size:0.85rem; color:var(--text-muted)">Ready.</p>
+            </div>
+            <div class="glass-card" style="font-size:0.82rem; color:var(--text-muted); line-height:1.7">
+                <b style="color:var(--text)">Dockerfile</b><br>
+                Stage 1 uses <code style="color:var(--primary)">node:20-alpine</code> to compile.<br>
+                Stage 2 copies the build into <code style="color:var(--primary)">nginx:alpine</code>.
+            </div>
+            <a href="../index.html" class="back-link">← Back to Hub</a>
+        </aside>
+
+        <main class="main-content">
+            <div class="glass-card" style="margin-bottom:1.5rem">
+                <h2 style="margin-bottom:1.25rem">Build Pipeline</h2>
+                <div class="stages">
+                    <div class="stage" id="s1">📦 STAGE 1<br>node:20-alpine<br>Build</div>
+                    <div class="arrow">→</div>
+                    <div class="stage" id="s2">🌐 STAGE 2<br>nginx:alpine<br>Serve</div>
+                    <div class="arrow">→</div>
+                    <div class="stage" id="s3">🚀 DEPLOY<br>Port 80<br>Running</div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h3 style="margin-bottom:1rem">Build Logs</h3>
+                <div class="console" id="logs">
+                    <div class="line dim">$ docker build -t my-react-app .</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const logs = document.getElementById('logs');
+        const status = document.getElementById('status');
+
+        function log(msg, dim = false) {
+            const d = document.createElement('div');
+            d.className = 'line' + (dim ? ' dim' : '');
+            d.textContent = msg;
+            logs.appendChild(d);
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        function setStage(id, cls) {
+            document.getElementById(id).className = 'stage ' + cls;
+        }
+
+        function resetBuild() {
+            ['s1','s2','s3'].forEach(s => document.getElementById(s).className = 'stage');
+            logs.innerHTML = '<div class="line dim">$ docker build -t my-react-app .</div>';
+            status.textContent = 'Ready.';
+            status.style.color = 'var(--text-muted)';
+        }
+
+        function runBuild() {
+            resetBuild();
+            status.textContent = 'Building...';
+            setStage('s1', 'active');
+            log('Step 1/6 — FROM node:20-alpine');
+
+            setTimeout(() => {
+                log('Step 2/6 — COPY package*.json ./');
+                log('Step 3/6 — RUN npm ci --silent');
+            }, 800);
+
+            setTimeout(() => {
+                log('Step 4/6 — RUN npm run build');
+                setStage('s1', 'done');
+                setStage('s2', 'active');
+            }, 2000);
+
+            setTimeout(() => {
+                log('Step 5/6 — FROM nginx:alpine');
+                log('Step 6/6 — COPY --from=build /app/dist /usr/share/nginx/html');
+                setStage('s2', 'done');
+                setStage('s3', 'active');
+            }, 3200);
+
+            setTimeout(() => {
+                log('✔ Image built: my-react-app — 23.8 MB');
+                setStage('s3', 'done');
+                status.textContent = 'Build complete!';
+                status.style.color = 'var(--success)';
+            }, 4400);
+        }
+    </script>
+</body>
+</html>

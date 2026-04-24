@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 10.3 — Social Feed</title>
+    <link rel="stylesheet" href="../../lab.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        .post-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+        .user-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #6366f1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #0a0f1e;
+            flex-shrink: 0;
+        }
+        .user-info b { font-size: 0.95rem; }
+        .user-info span { display: block; font-size: 0.75rem; color: var(--text-muted); }
+        .post-body { font-size: 0.92rem; line-height: 1.65; margin-bottom: 1rem; }
+        .post-actions {
+            display: flex;
+            gap: 1.5rem;
+            border-top: 1px solid var(--border);
+            padding-top: 0.75rem;
+        }
+        .action {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-family: 'Outfit', sans-serif;
+            transition: color 0.2s;
+        }
+        .action:hover { color: var(--text); }
+        .action.liked { color: #f43f5e; }
+        .cloud-dot {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            color: var(--success);
+            margin-bottom: 0.5rem;
+        }
+        .cloud-dot::before {
+            content: '●';
+            font-size: 0.55rem;
+        }
+        .empty { color: var(--text-muted); text-align: center; padding: 3rem; font-size: 0.9rem; }
+        textarea.input-field { resize: none; min-height: 70px; }
+    </style>
+</head>
+<body>
+    <div class="lab-layout">
+        <aside class="sidebar">
+            <div class="header">
+                <h1>Social <span style="color:var(--text)">Feed</span></h1>
+                <p>AWS Hybrid Deployment</p>
+            </div>
+
+            <div class="glass-card">
+                <h3 style="margin-bottom:0.75rem">New Post</h3>
+                <textarea id="postText" class="input-field" placeholder="What's on your mind?"></textarea>
+                <button class="btn" style="width:100%" onclick="addPost()">Post to Feed</button>
+            </div>
+
+            <div class="glass-card">
+                <b style="font-size:0.85rem">Cloud Status</b>
+                <div class="cloud-dot" style="margin-top:0.75rem">AWS ECS Cluster: Healthy</div>
+                <div class="cloud-dot">DynamoDB: Connected</div>
+                <div class="cloud-dot">CloudFront CDN: Active</div>
+            </div>
+
+            <a href="../index.html" class="back-link">← Back to Hub</a>
+        </aside>
+
+        <main class="main-content">
+            <div id="feed"></div>
+        </main>
+    </div>
+
+    <script>
+        // In-memory feed — simulates DynamoDB document store
+        let feed = [];
+        const ME = 'You';
+
+        function initials(name) {
+            return name.split('_').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+        }
+
+        function addPost() {
+            const text = document.getElementById('postText').value.trim();
+            if (!text) return;
+            feed.unshift({ id: Date.now(), text, user: ME, likes: 0, liked: false });
+            document.getElementById('postText').value = '';
+            render();
+        }
+
+        function toggleLike(id) {
+            feed = feed.map(p => {
+                if (p.id !== id) return p;
+                const liked = !p.liked;
+                return { ...p, liked, likes: liked ? p.likes + 1 : p.likes - 1 };
+            });
+            render();
+        }
+
+        function render() {
+            const el = document.getElementById('feed');
+            if (feed.length === 0) {
+                el.innerHTML = '<div class="empty">No posts yet. Share something!</div>';
+                return;
+            }
+            el.innerHTML = feed.map(p => `
+                <div class="post-card">
+                    <div class="user-row">
+                        <div class="avatar">${initials(p.user)}</div>
+                        <div class="user-info">
+                            <b>${p.user}</b>
+                            <span>${new Date(p.id).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · Posted via AWS</span>
+                        </div>
+                    </div>
+                    <div class="post-body">${p.text}</div>
+                    <div class="post-actions">
+                        <button class="action ${p.liked ? 'liked' : ''}" onclick="toggleLike(${p.id})">
+                            ♥ ${p.likes > 0 ? p.likes : ''} Like
+                        </button>
+                        <button class="action">💬 Comment</button>
+                        <button class="action">⚡ Share</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Seed a starter post
+        feed.push({ id: Date.now() - 60000, text: 'Welcome to the Social Feed! This app uses a MERN stack with AWS ECS for container hosting and DynamoDB for document storage.', user: 'Aarush_Dev', likes: 3, liked: false });
+        render();
+    </script>
+</body>
+</html>

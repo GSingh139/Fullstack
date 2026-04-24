@@ -1,0 +1,113 @@
+:root {
+    --primary: #14b8a6;
+    --accent: #f97316;
+    --bg: #0a0f1e;
+    --card-bg: rgba(20, 30, 48, 0.6);
+    --border: rgba(255, 255, 255, 0.08);
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --success: #22d3a0;
+    --error: #f87171;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+}
+
+.lab-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    height: 100vh;
+}
+
+.sidebar {
+    background: rgba(10, 15, 30, 0.9);
+    border-right: 1px solid var(--border);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    overflow-y: auto;
+}
+
+.main-content {
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.glass-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+}
+
+.header h1 { font-size: 1.8rem; color: var(--primary); }
+.header h1 span { color: var(--text); }
+.header p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
+
+.console {
+    background: #050a10;
+    border-radius: 10px;
+    padding: 1rem;
+    font-family: 'Fira Code', 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: var(--success);
+    height: 200px;
+    overflow-y: auto;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+.console .line { margin-bottom: 0.2rem; }
+.console .dim { color: var(--text-muted); font-size: 0.78rem; }
+
+.btn {
+    padding: 0.65rem 1.1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    background: var(--primary);
+    color: #0a0f1e;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+.input-field {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    margin-bottom: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.input-field:focus { border-color: var(--primary); }
+
+.back-link {
+    margin-top: auto;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.back-link:hover { opacity: 0.75; }
+
+@media (max-width: 900px) {
+    .lab-layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+}

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ex 2.3 - Drawing Tool</title>
+  <link rel="stylesheet" href="canvas.css">
+</head>
+<body>
+
+<div class="draw-box">
+  <h2>SVG Drawing Tool</h2>
+  <div class="toolbar">
+    <label for="colorPicker">Color</label>
+    <input type="color" id="colorPicker" value="#222222">
+    <label for="strokeSize">Size</label>
+    <input type="range" id="strokeSize" min="1" max="20" value="3">
+    <button id="clearBtn">Clear</button>
+  </div>
+  <svg id="board"></svg>
+</div>
+
+<script src="draw.js"></script>
+</body>
+</html>

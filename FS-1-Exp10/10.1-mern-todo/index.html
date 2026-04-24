@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 10.1 — MERN Todo</title>
+    <link rel="stylesheet" href="../../lab.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        .task {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.85rem 1rem;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.02);
+            margin-bottom: 0.6rem;
+            border-left: 3px solid var(--primary);
+            transition: opacity 0.3s;
+        }
+        .task.done {
+            opacity: 0.45;
+            border-left-color: var(--success);
+            text-decoration: line-through;
+        }
+        .task span { flex: 1; font-size: 0.95rem; }
+        .del-btn {
+            padding: 0.25rem 0.6rem;
+            background: rgba(248,113,113,0.15);
+            color: var(--error);
+            border: none;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .del-btn:hover { background: rgba(248,113,113,0.3); }
+        .empty { color: var(--text-muted); text-align: center; padding: 2rem; font-size: 0.9rem; }
+        .summary { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="lab-layout">
+        <aside class="sidebar">
+            <div class="header">
+                <h1>MERN <span style="color:var(--text)">Todo</span></h1>
+                <p>Full-Stack CRUD Lab</p>
+            </div>
+            <div class="glass-card">
+                <h3 style="margin-bottom:0.75rem">New Task</h3>
+                <input type="text" id="taskInput" class="input-field" placeholder="Add a task..." onkeydown="if(event.key==='Enter') addTask()">
+                <button class="btn" style="width:100%" onclick="addTask()">+ Save to DB</button>
+            </div>
+            <a href="../index.html" class="back-link">← Back to Hub</a>
+        </aside>
+
+        <main class="main-content">
+            <div class="glass-card">
+                <h2 style="margin-bottom:0.5rem">Active Tasks</h2>
+                <p class="summary" id="summary"></p>
+                <div id="taskList"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Simple in-memory store (simulates MongoDB collection)
+        let tasks = [];
+
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const text = input.value.trim();
+            if (!text) return;
+            tasks.unshift({ id: Date.now(), text, done: false });
+            input.value = '';
+            render();
+        }
+
+        function toggleTask(id) {
+            tasks = tasks.map(t => t.id === id ? { ...t, done: !t.done } : t);
+            render();
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            render();
+        }
+
+        function render() {
+            const list = document.getElementById('taskList');
+            const summary = document.getElementById('summary');
+            const remaining = tasks.filter(t => !t.done).length;
+            summary.textContent = `${tasks.length} total · ${remaining} remaining`;
+
+            if (tasks.length === 0) {
+                list.innerHTML = '<div class="empty">No tasks yet. Add one above!</div>';
+                return;
+            }
+
+            list.innerHTML = tasks.map(t => `
+                <div class="task ${t.done ? 'done' : ''}">
+                    <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask(${t.id})">
+                    <span>${t.text}</span>
+                    <button class="del-btn" onclick="deleteTask(${t.id})">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        render();
+    </script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 9.2 — CI/CD Pipeline</title>
+    <link rel="stylesheet" href="../../lab.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        .pipeline {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            padding: 1.5rem;
+            background: rgba(0,0,0,0.2);
+            border-radius: 14px;
+        }
+        .node {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-align: center;
+            color: var(--text-muted);
+            transition: all 0.4s;
+            gap: 0.3rem;
+        }
+        .node .icon { font-size: 1.3rem; }
+        .node.running {
+            border-color: var(--primary);
+            color: var(--primary);
+            animation: pulse 0.9s infinite;
+        }
+        .node.done {
+            border-color: var(--success);
+            color: var(--success);
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+        .connector { color: var(--border); font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+    <div class="lab-layout">
+        <aside class="sidebar">
+            <div class="header">
+                <h1>Lab 9.2</h1>
+                <p>CI/CD with GitHub Actions</p>
+            </div>
+            <div class="glass-card">
+                <h3 style="margin-bottom:1rem">Trigger</h3>
+                <button class="btn" style="width:100%; margin-bottom:0.75rem" onclick="startPipeline()">⬆ Push to main</button>
+                <button class="btn" style="width:100%; background:rgba(255,255,255,0.08); color:var(--text)" onclick="resetPipeline()">↺ Reset</button>
+            </div>
+            <div class="glass-card" style="font-size:0.82rem; color:var(--text-muted); line-height:1.75">
+                <b style="color:var(--text)">Workflow file</b><br>
+                <code style="color:var(--primary)">.github/workflows/main.yml</code><br><br>
+                Runs on every push or PR to <code>main</code>.
+            </div>
+            <a href="../index.html" class="back-link">← Back to Hub</a>
+        </aside>
+
+        <main class="main-content">
+            <div class="glass-card" style="margin-bottom:1.5rem">
+                <h2 style="margin-bottom:1.25rem">Pipeline Steps</h2>
+                <div class="pipeline">
+                    <div class="node" id="n1"><span class="icon">🧪</span>TEST</div>
+                    <div class="connector">→</div>
+                    <div class="node" id="n2"><span class="icon">🔨</span>BUILD</div>
+                    <div class="connector">→</div>
+                    <div class="node" id="n3"><span class="icon">📤</span>PUSH</div>
+                    <div class="connector">→</div>
+                    <div class="node" id="n4"><span class="icon">🔔</span>NOTIFY</div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h3 style="margin-bottom:1rem">Job Logs</h3>
+                <div class="console" id="jobLogs">
+                    <div class="line dim">Listening for push events on main...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const jobLogs = document.getElementById('jobLogs');
+
+        function log(msg) {
+            const d = document.createElement('div');
+            d.className = 'line';
+            d.textContent = msg;
+            jobLogs.appendChild(d);
+            jobLogs.scrollTop = jobLogs.scrollHeight;
+        }
+
+        function setNode(id, cls) {
+            document.getElementById(id).className = 'node ' + cls;
+        }
+
+        function resetPipeline() {
+            ['n1','n2','n3','n4'].forEach(n => document.getElementById(n).className = 'node');
+            jobLogs.innerHTML = '<div class="line dim">Listening for push events on main...</div>';
+        }
+
+        function startPipeline() {
+            resetPipeline();
+            log('[Event] Push detected → branch: main, sha: a3f8c1d');
+
+            const steps = [
+                { id: 'n1', msg: '[test] Running Vitest... 24 tests passed.' },
+                { id: 'n2', msg: '[build] docker build -t app:a3f8c1d ... Done.' },
+                { id: 'n3', msg: '[push] Pushing to ghcr.io/org/app:a3f8c1d ... OK' },
+                { id: 'n4', msg: '[notify] Slack message sent to #deployments.' }
+            ];
+
+            let i = 0;
+            function next() {
+                if (i >= steps.length) return;
+                setNode(steps[i].id, 'running');
+                setTimeout(() => {
+                    setNode(steps[i].id, 'done');
+                    log(steps[i].msg);
+                    i++;
+                    next();
+                }, 1300);
+            }
+            next();
+        }
+    </script>
+</body>
+</html>

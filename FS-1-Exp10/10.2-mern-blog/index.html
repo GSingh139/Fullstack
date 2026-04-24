@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 10.2 — MERN Blog</title>
+    <link rel="stylesheet" href="../../lab.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        .post {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .post-meta { font-size: 0.78rem; color: var(--primary); margin-bottom: 0.5rem; }
+        .post h2 { font-size: 1.15rem; margin-bottom: 0.6rem; }
+        .post p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; }
+        .comments { border-top: 1px solid var(--border); margin-top: 1rem; padding-top: 1rem; }
+        .comment { font-size: 0.82rem; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text-muted); }
+        .comment b { color: var(--text); }
+        .comment-form { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+        .comment-form input { flex: 1; margin: 0; }
+        .token-badge { display: inline-block; background: rgba(20,184,166,0.12); color: var(--primary); padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.72rem; font-family: monospace; margin-top: 0.5rem; }
+        textarea.input-field { resize: vertical; min-height: 80px; }
+    </style>
+</head>
+<body>
+    <div class="lab-layout">
+        <aside class="sidebar" id="sidebar"></aside>
+        <main class="main-content" id="feed"></main>
+    </div>
+
+    <script>
+        // In-memory store — simulates MongoDB + JWT auth
+        let currentUser = null;
+        let posts = [];
+
+        function login() {
+            const name = document.getElementById('loginName').value.trim();
+            if (!name) return;
+            // Simulate JWT token generation
+            currentUser = { name, token: 'eyJhbGciOiJIUzI1NiJ9.' + btoa(name) };
+            buildUI();
+        }
+
+        function logout() {
+            currentUser = null;
+            buildUI();
+        }
+
+        function createPost() {
+            const title = document.getElementById('pTitle').value.trim();
+            const body  = document.getElementById('pBody').value.trim();
+            if (!title || !body) return;
+            posts.unshift({ id: Date.now(), title, body, author: currentUser.name, comments: [] });
+            document.getElementById('pTitle').value = '';
+            document.getElementById('pBody').value = '';
+            renderFeed();
+        }
+
+        function addComment(postId) {
+            const input = document.getElementById('c_' + postId);
+            const text = input.value.trim();
+            if (!text) return;
+            posts = posts.map(p =>
+                p.id === postId
+                    ? { ...p, comments: [...p.comments, { user: currentUser.name, text }] }
+                    : p
+            );
+            input.value = '';
+            renderFeed();
+        }
+
+        function buildUI() {
+            const sidebar = document.getElementById('sidebar');
+            if (!currentUser) {
+                sidebar.innerHTML = `
+                    <div class="header"><h1>Blog <span style="color:var(--text)">Hub</span></h1><p>Sign in to post</p></div>
+                    <div class="glass-card">
+                        <h3 style="margin-bottom:0.75rem">Login (Simulated JWT)</h3>
+                        <input type="text" id="loginName" class="input-field" placeholder="Pick a username" onkeydown="if(event.key==='Enter') login()">
+                        <button class="btn" style="width:100%" onclick="login()">Sign In</button>
+                    </div>
+                    <a href="../index.html" class="back-link">← Back to Hub</a>
+                `;
+            } else {
+                sidebar.innerHTML = `
+                    <div class="header"><h1>Dashboard</h1><p>Signed in as <b>${currentUser.name}</b></p></div>
+                    <div class="glass-card">
+                        <p style="margin-bottom:0.5rem; font-size:0.78rem; color:var(--text-muted)">JWT Token</p>
+                        <div class="token-badge">${currentUser.token.slice(0, 28)}…</div>
+                        <h3 style="margin:1rem 0 0.75rem">New Post</h3>
+                        <input type="text" id="pTitle" class="input-field" placeholder="Post title">
+                        <textarea id="pBody" class="input-field" placeholder="Write your content..."></textarea>
+                        <button class="btn" style="width:100%; margin-bottom:0.5rem" onclick="createPost()">Publish Post</button>
+                        <button class="btn" style="width:100%; background:rgba(248,113,113,0.15); color:var(--error)" onclick="logout()">Sign Out</button>
+                    </div>
+                    <a href="../index.html" class="back-link">← Back to Hub</a>
+                `;
+            }
+            renderFeed();
+        }
+
+        function renderFeed() {
+            const feed = document.getElementById('feed');
+            if (posts.length === 0) {
+                feed.innerHTML = '<div style="color:var(--text-muted); padding:3rem; text-align:center">No posts yet. Sign in and write the first one!</div>';
+                return;
+            }
+            feed.innerHTML = posts.map(p => `
+                <div class="post">
+                    <div class="post-meta">By ${p.author} · ${new Date(p.id).toLocaleDateString()}</div>
+                    <h2>${p.title}</h2>
+                    <p>${p.body}</p>
+                    <div class="comments">
+                        <b style="font-size:0.85rem">Comments (${p.comments.length})</b>
+                        ${p.comments.map(c => `<div class="comment"><b>${c.user}:</b> ${c.text}</div>`).join('')}
+                        ${currentUser ? `
+                            <div class="comment-form">
+                                <input type="text" id="c_${p.id}" class="input-field" placeholder="Add a comment..." onkeydown="if(event.key==='Enter') addComment(${p.id})">
+                                <button class="btn" onclick="addComment(${p.id})">Post</button>
+                            </div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        buildUI();
+    </script>
+</body>
+</html>

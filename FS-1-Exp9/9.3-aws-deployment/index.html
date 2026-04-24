@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 9.3 — AWS ECS Deployment</title>
+    <link rel="stylesheet" href="../../lab.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        .aws-header {
+            background: #1a2332;
+            border: 1px solid rgba(255,153,0,0.3);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .aws-logo { font-size: 1.5rem; }
+        .instance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+        .instance {
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.03);
+            text-align: center;
+            font-size: 0.8rem;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.55rem;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+        .badge.running { background: rgba(34,211,160,0.15); color: var(--success); }
+        .badge.starting { background: rgba(99,102,241,0.15); color: #818cf8; }
+    </style>
+</head>
+<body>
+    <div class="lab-layout">
+        <aside class="sidebar">
+            <div class="header">
+                <h1>Lab 9.3</h1>
+                <p>AWS ECS + Auto Scaling</p>
+            </div>
+            <div class="glass-card">
+                <h3 style="margin-bottom:1rem">Auto Scaling</h3>
+                <button class="btn" style="width:100%; margin-bottom:0.75rem" onclick="scaleUp()">⬆ Scale Up</button>
+                <button class="btn" style="width:100%; background:rgba(248,113,113,0.15); color:var(--error)" onclick="scaleDown()">⬇ Scale Down</button>
+                <p id="countLabel" style="margin-top:1rem; font-size:0.82rem; color:var(--text-muted)">Tasks: 1 / 5</p>
+            </div>
+            <div class="glass-card" style="font-size: 0.82rem; color: var(--text-muted)">
+                <b style="color:var(--text)">Terraform snippet</b>
+                <pre style="margin-top:0.75rem; line-height:1.6; color:var(--primary); font-size:0.75rem; white-space:pre-wrap">resource "aws_ecs_service" "app" {
+  desired_count = 2
+  launch_type   = "FARGATE"
+}</pre>
+            </div>
+            <a href="../index.html" class="back-link">← Back to Hub</a>
+        </aside>
+
+        <main class="main-content">
+            <div class="aws-header">
+                <span class="aws-logo">☁️</span>
+                <div>
+                    <b>Elastic Container Service</b>
+                    <div style="font-size:0.8rem; color:var(--text-muted)">Cluster: prod-cluster &nbsp;|&nbsp; Service: my-app</div>
+                </div>
+                <div style="margin-left:auto">
+                    <span class="badge running">● Healthy</span>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h3 style="margin-bottom:1rem">Running Tasks</h3>
+                <div class="instance-grid" id="instanceGrid"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let tasks = [{ id: randId(), status: 'running' }];
+
+        function randId() {
+            return 'task-' + Math.random().toString(16).slice(2, 8);
+        }
+
+        function updateLabel() {
+            document.getElementById('countLabel').textContent = `Tasks: ${tasks.length} / 5`;
+        }
+
+        function renderGrid() {
+            document.getElementById('instanceGrid').innerHTML = tasks.map(t => `
+                <div class="instance">
+                    🐳 ${t.id}
+                    <div><span class="badge ${t.status}">${t.status === 'running' ? '● Running' : '◌ Starting'}</span></div>
+                </div>
+            `).join('');
+        }
+
+        function scaleUp() {
+            if (tasks.length >= 5) return;
+            const newTask = { id: randId(), status: 'starting' };
+            tasks.push(newTask);
+            renderGrid();
+            updateLabel();
+            setTimeout(() => {
+                newTask.status = 'running';
+                renderGrid();
+            }, 1500);
+        }
+
+        function scaleDown() {
+            if (tasks.length <= 1) return;
+            tasks.pop();
+            renderGrid();
+            updateLabel();
+        }
+
+        renderGrid();
+        updateLabel();
+    </script>
+</body>
+</html>
