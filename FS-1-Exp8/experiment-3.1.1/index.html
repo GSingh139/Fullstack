@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exp 3.1.1 — React Login Form</title>
+<link rel="stylesheet" href="../lab.css">
+<style>
+  .center-wrap {
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  .login-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 2.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .login-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+    opacity: 0.5;
+  }
+
+  .login-logo {
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.75rem;
+  }
+
+  .login-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 0.35rem;
+    line-height: 1.1;
+  }
+
+  .login-sub {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .creds-hint {
+    background: var(--gold-dim);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.02em;
+  }
+
+  .creds-hint strong { color: var(--gold); }
+
+  .field-group { margin-bottom: 1.1rem; }
+
+  .field-label {
+    display: block;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .field-input {
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 2px;
+    padding: 0.65rem 0.8rem;
+    font-size: 0.8rem;
+    font-family: 'JetBrains Mono', monospace;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .field-input:focus { border-color: rgba(201,168,76,0.5); }
+  .field-input.error { border-color: rgba(248,113,113,0.5); }
+  .field-input::placeholder { color: var(--text-dim); }
+
+  .field-error { font-size: 0.68rem; color: var(--error); margin-top: 0.35rem; }
+
+  .validation-list { margin-top: 0.6rem; }
+
+  .vr {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.68rem;
+    padding: 0.2rem 0;
+    transition: color 0.2s;
+  }
+
+  .vr-ok { color: var(--success); }
+  .vr-no { color: var(--text-dim); }
+
+  .submit-btn {
+    width: 100%;
+    background: var(--gold-dim);
+    border: 1px solid var(--border-hover);
+    color: var(--gold);
+    border-radius: 2px;
+    padding: 0.75rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    margin-top: 0.75rem;
+    transition: all 0.2s;
+  }
+
+  .submit-btn:hover:not(:disabled) { background: rgba(201,168,76,0.22); }
+  .submit-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .form-state {
+    text-align: center;
+    margin-top: 0.85rem;
+    font-size: 0.72rem;
+    min-height: 1.2rem;
+  }
+
+  .state-success { color: var(--success); }
+  .state-error { color: var(--error); }
+
+  /* Session bar */
+  .session-bar {
+    background: var(--bg-card);
+    border: 1px solid rgba(74,222,128,0.25);
+    border-radius: 3px;
+    padding: 1.75rem;
+    text-align: center;
+    display: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .session-bar::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: var(--success);
+    opacity: 0.4;
+  }
+
+  .sb-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--success);
+    margin-bottom: 0.75rem;
+  }
+
+  .sb-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 0.4rem;
+  }
+
+  .sb-meta { font-size: 0.7rem; color: var(--text-muted); }
+
+  .logout-btn {
+    margin-top: 1.25rem;
+    background: rgba(248,113,113,0.08);
+    border: 1px solid rgba(248,113,113,0.25);
+    color: var(--error);
+    padding: 0.5rem 1.25rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.2s;
+  }
+  .logout-btn:hover { background: rgba(248,113,113,0.18); }
+</style>
+</head>
+<body>
+<div class="lab-container">
+  <a href="../index.html" class="back-btn">← Hub</a>
+
+  <div class="lab-header">
+    <div class="exp-badge">Exp 3.1.1</div>
+    <h1>Login Form</h1>
+    <p>React Hook Form · Material UI · Client-Side Validation</p>
+  </div>
+
+  <div class="center-wrap">
+    <!-- Session bar -->
+    <div class="session-bar" id="sessionBar">
+      <div class="sb-label">Session Active</div>
+      <div class="sb-name" id="sessionName"></div>
+      <div class="sb-meta" id="sessionMeta"></div>
+      <div><button class="logout-btn" onclick="logout()">Sign Out</button></div>
+    </div>
+
+    <!-- Login Box -->
+    <div class="login-box" id="loginBox">
+      <div class="login-logo">// Secure Access</div>
+      <div class="login-title">Welcome Back</div>
+      <div class="login-sub">Sign in to continue</div>
+
+      <div class="creds-hint">
+        Test creds: <strong>admin@test.com</strong> / <strong>password123</strong>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Email</label>
+        <input id="email" class="field-input" type="email" placeholder="you@example.com" oninput="validate()">
+        <div class="field-error" id="emailErr"></div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Password</label>
+        <input id="password" class="field-input" type="password" placeholder="••••••••" oninput="validate()" onkeydown="if(event.key==='Enter')doLogin()">
+        <div class="field-error" id="passErr"></div>
+        <div class="validation-list" id="valList">
+          <div class="vr vr-no" id="v-len">○ Minimum 8 characters</div>
+          <div class="vr vr-no" id="v-num">○ Contains a number</div>
+          <div class="vr vr-no" id="v-upper">○ Contains uppercase letter</div>
+        </div>
+      </div>
+
+      <button class="submit-btn" id="submitBtn" onclick="doLogin()" disabled>Authenticate</button>
+      <div class="form-state" id="formState"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const VALID_CREDS = [
+  {email:'admin@test.com', pass:'password123', name:'Admin User', role:'Administrator'},
+  {email:'user@test.com',  pass:'User@1234',   name:'John Doe',   role:'Standard User'},
+];
+
+function validate() {
+  const e = document.getElementById('email').value;
+  const p = document.getElementById('password').value;
+  let valid = true;
+
+  const eErr = document.getElementById('emailErr');
+  if (e && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) {
+    eErr.textContent = 'Invalid email format';
+    document.getElementById('email').classList.add('error');
+    valid = false;
+  } else {
+    eErr.textContent = '';
+    document.getElementById('email').classList.remove('error');
+  }
+
+  const vLen = p.length >= 8;
+  const vNum = /\d/.test(p);
+  const vUpper = /[A-Z]/.test(p);
+
+  setRule('v-len', vLen, 'Minimum 8 characters');
+  setRule('v-num', vNum, 'Contains a number');
+  setRule('v-upper', vUpper, 'Contains uppercase letter');
+
+  if (!vLen || !vNum || !vUpper || !e) valid = false;
+  document.getElementById('submitBtn').disabled = !valid;
+  return valid;
+}
+
+function setRule(id, ok, label) {
+  const el = document.getElementById(id);
+  el.className = `vr ${ok ? 'vr-ok' : 'vr-no'}`;
+  el.textContent = (ok ? '✓ ' : '○ ') + label;
+}
+
+function doLogin() {
+  if (!validate()) return;
+  const e = document.getElementById('email').value;
+  const p = document.getElementById('password').value;
+  const state = document.getElementById('formState');
+  const btn = document.getElementById('submitBtn');
+
+  btn.disabled = true;
+  btn.textContent = 'Verifying...';
+  state.textContent = '';
+
+  setTimeout(() => {
+    const user = VALID_CREDS.find(u => u.email === e && u.pass === p);
+    if (user) {
+      state.className = 'form-state state-success';
+      state.textContent = '✓ Authentication successful';
+      setTimeout(() => showSession(user), 500);
+    } else {
+      state.className = 'form-state state-error';
+      state.textContent = '✕ Invalid credentials';
+      btn.disabled = false;
+      btn.textContent = 'Authenticate';
+    }
+  }, 700);
+}
+
+function showSession(user) {
+  document.getElementById('loginBox').style.display = 'none';
+  const bar = document.getElementById('sessionBar');
+  bar.style.display = 'block';
+  document.getElementById('sessionName').textContent = user.name;
+  document.getElementById('sessionMeta').textContent = `Role: ${user.role}  ·  ${new Date().toLocaleTimeString()}  ·  Session active`;
+}
+
+function logout() {
+  document.getElementById('sessionBar').style.display = 'none';
+  document.getElementById('loginBox').style.display = 'block';
+  document.getElementById('email').value = '';
+  document.getElementById('password').value = '';
+  document.getElementById('formState').textContent = '';
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('submitBtn').textContent = 'Authenticate';
+  ['v-len','v-num','v-upper'].forEach((id, i) => {
+    const labels = ['Minimum 8 characters','Contains a number','Contains uppercase letter'];
+    const el = document.getElementById(id);
+    el.className = 'vr vr-no';
+    el.textContent = '○ ' + labels[i];
+  });
+}
+</script>
+</body>
+</html>

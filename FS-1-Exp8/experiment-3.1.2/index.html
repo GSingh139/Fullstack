@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exp 3.1.2 — JWT Protected Routes</title>
+<link rel="stylesheet" href="../lab.css">
+<style>
+  /* App Simulator */
+  .page-sim {
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .app-topbar {
+    background: #080705;
+    padding: 0.7rem 1.1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    gap: 1rem;
+  }
+
+  .app-logo {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    white-space: nowrap;
+  }
+
+  .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+
+  .nav-link {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.3rem 0.6rem;
+    border-radius: 2px;
+    transition: all 0.15s;
+    letter-spacing: 0.06em;
+    border: 1px solid transparent;
+  }
+
+  .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  .nav-link.active { color: var(--gold); border-color: var(--border); background: var(--gold-dim); }
+
+  .app-page {
+    min-height: 240px;
+    padding: 2rem;
+    background: rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Page content styles */
+  .protected-lock { text-align: center; }
+  .lock-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+  .lock-msg { color: var(--error); font-size: 0.82rem; margin-bottom: 0.35rem; font-weight: 600; }
+  .lock-hint { color: var(--text-muted); font-size: 0.72rem; }
+
+  .route-pill {
+    display: inline-block;
+    font-size: 0.68rem;
+    background: var(--gold-dim);
+    border: 1px solid var(--border);
+    padding: 0.2rem 0.65rem;
+    border-radius: 2px;
+    color: var(--gold);
+    margin-bottom: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .user-card {
+    background: rgba(74,222,128,0.04);
+    border: 1px solid rgba(74,222,128,0.2);
+    border-radius: 3px;
+    padding: 1.5rem 2rem;
+    text-align: center;
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .uc-avatar { font-size: 2rem; margin-bottom: 0.6rem; }
+  .uc-name { font-family: 'DM Serif Display', serif; font-size: 1.3rem; font-weight: 400; color: var(--success); }
+  .uc-role { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.3rem; letter-spacing: 0.08em; }
+  .uc-meta { font-size: 0.65rem; color: var(--text-dim); margin-top: 0.75rem; line-height: 1.5; }
+
+  /* Login modal */
+  .login-modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1.5rem;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+
+  .login-modal-title {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.6rem;
+  }
+
+  .login-hint {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+
+  /* Interceptor log */
+  .interceptor-log {
+    background: #050403;
+    border: 1px solid rgba(201,168,76,0.1);
+    border-radius: 3px;
+    padding: 0.85rem 1rem;
+    max-height: 160px;
+    overflow-y: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    line-height: 1.6;
+  }
+
+  .il-row { margin: 1px 0; }
+  .il-req { color: var(--info); }
+  .il-ok  { color: var(--success); }
+  .il-401 { color: var(--warn); }
+  .il-err { color: var(--error); }
+  .il-ts  { color: var(--text-dim); margin-right: 0.4rem; }
+</style>
+</head>
+<body>
+<div class="lab-container">
+  <a href="../index.html" class="back-btn">← Hub</a>
+
+  <div class="lab-header">
+    <div class="exp-badge">Exp 3.1.2</div>
+    <h1>JWT Protected Routes</h1>
+    <p>React Router · Axios Interceptors · Auto-logout · Token Refresh</p>
+  </div>
+
+  <!-- App Simulator -->
+  <div class="lab-card">
+    <div class="card-title">App Simulator</div>
+    <div class="page-sim">
+      <div class="app-topbar">
+        <div class="app-logo">⬡ SecureApp</div>
+        <div class="nav-links">
+          <span class="nav-link" onclick="navigate('home')">Home</span>
+          <span class="nav-link" onclick="navigate('dashboard')">Dashboard</span>
+          <span class="nav-link" onclick="navigate('profile')">Profile</span>
+          <span class="nav-link" onclick="navigate('admin')">Admin</span>
+        </div>
+        <div id="authBtn">
+          <button class="lab-btn" style="padding:0.3rem 0.75rem;font-size:0.65rem;" onclick="openLogin()">Login</button>
+        </div>
+      </div>
+      <div class="app-page" id="appPage">
+        <div style="text-align:center;">
+          <div style="font-size:2rem;margin-bottom:0.6rem;">⌂</div>
+          <div style="font-size:0.85rem;font-weight:600;color:var(--text);">Home</div>
+          <div style="color:var(--text-muted);font-size:0.7rem;margin-top:0.4rem;">Public route — accessible to everyone</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div class="lab-card" id="loginModal" style="display:none">
+    <div class="card-title">Authenticate</div>
+    <div style="max-width:300px;margin:0 auto;text-align:center;">
+      <div class="login-hint">Use: <strong style="color:var(--gold)">admin / password123</strong> or <strong style="color:var(--gold)">user / user123</strong></div>
+      <input id="lu2" class="lab-input" placeholder="Username" style="width:100%;margin-bottom:0.5rem;" value="admin">
+      <input id="lp2" class="lab-input" type="password" placeholder="Password" style="width:100%;margin-bottom:0.75rem;" value="password123">
+      <div style="display:flex;gap:0.5rem;justify-content:center;">
+        <button class="lab-btn" onclick="doLogin()">Sign In</button>
+        <button class="lab-btn" style="background:transparent;border-color:var(--border);color:var(--text-muted);" onclick="cancelLogin()">Cancel</button>
+      </div>
+      <div id="loginErr" style="color:var(--error);font-size:0.7rem;margin-top:0.6rem;"></div>
+    </div>
+  </div>
+
+  <!-- Interceptor Log -->
+  <div class="lab-card">
+    <div class="card-title">Axios Interceptor Log</div>
+    <div class="interceptor-log" id="interceptorLog">
+      <div class="il-row il-req"><span class="il-ts">init</span>Interceptor attached — monitoring all requests</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const USERS = {
+  admin: { pass:'password123', name:'Admin User', role:'admin', email:'admin@test.com' },
+  user:  { pass:'user123',     name:'John Doe',   role:'user',  email:'user@test.com'  }
+};
+let currentUser = null, jwtToken = null;
+const PROTECTED = { dashboard:true, profile:true, admin:'admin' };
+
+function log(type, msg) {
+  const el = document.getElementById('interceptorLog');
+  const d = document.createElement('div');
+  d.className = `il-row il-${type}`;
+  const ts = new Date().toLocaleTimeString('en-US',{hour12:false});
+  d.innerHTML = `<span class="il-ts">${ts}</span>${msg}`;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+
+function openLogin() { document.getElementById('loginModal').style.display='block'; }
+function cancelLogin() { document.getElementById('loginModal').style.display='none'; }
+
+function doLogin() {
+  const u = document.getElementById('lu2').value;
+  const p = document.getElementById('lp2').value;
+  const userData = USERS[u];
+  if (!userData || userData.pass !== p) {
+    document.getElementById('loginErr').textContent = '✕ Invalid credentials';
+    log('401', `POST /api/auth/login → 401 Unauthorized`);
+    return;
+  }
+  currentUser = {...userData, username:u};
+  jwtToken = 'eyJhbGci.' + btoa(u+Date.now()).replace(/=/g,'').substring(0,12);
+  log('ok', `POST /api/auth/login → 200 OK — JWT issued`);
+  log('ok', `Interceptor: Bearer token stored — attached to all future requests`);
+  document.getElementById('loginModal').style.display='none';
+  document.getElementById('authBtn').innerHTML =
+    `<div style="display:flex;align-items:center;gap:0.6rem;font-size:0.68rem;color:var(--text-muted);">
+      <span style="color:var(--gold)">${u}</span>
+      <button class="lab-btn" style="padding:0.25rem 0.65rem;font-size:0.62rem;" onclick="doLogout()">Out</button>
+    </div>`;
+  navigate('dashboard');
+}
+
+function doLogout() {
+  currentUser = null; jwtToken = null;
+  log('req', 'Interceptor: Token cleared — session ended');
+  document.getElementById('authBtn').innerHTML = `<button class="lab-btn" style="padding:0.3rem 0.75rem;font-size:0.65rem;" onclick="openLogin()">Login</button>`;
+  navigate('home');
+}
+
+function navigate(page) {
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  const appPage = document.getElementById('appPage');
+
+  if (PROTECTED[page]) {
+    log('req', `GET /${page} → checking token...`);
+    if (!jwtToken) {
+      log('401', `GET /${page} → 401 Unauthorized — redirect to login`);
+      appPage.innerHTML = `<div class="protected-lock">
+        <div class="lock-icon">⊘</div>
+        <div class="route-pill">/${page}</div>
+        <div class="lock-msg">Protected Route — Auth Required</div>
+        <div class="lock-hint">React Router redirected to /login</div>
+        <br><button class="lab-btn" onclick="openLogin()" style="margin-top:0.75rem;">Sign In</button>
+      </div>`;
+      return;
+    }
+    if (PROTECTED[page] === 'admin' && currentUser.role !== 'admin') {
+      log('err', `GET /${page} → 403 Forbidden — role: ${currentUser.role}`);
+      appPage.innerHTML = `<div class="protected-lock">
+        <div class="lock-icon">⊗</div>
+        <div class="route-pill">/${page}</div>
+        <div class="lock-msg">403 — Forbidden</div>
+        <div class="lock-hint">Admin role required. Your role: <span style="color:var(--warn)">${currentUser.role}</span></div>
+      </div>`;
+      return;
+    }
+    log('ok', `GET /${page} → 200 OK — JWT valid`);
+  }
+
+  const pages = {
+    home: `<div style="text-align:center;"><div style="font-size:2rem;margin-bottom:0.6rem;">⌂</div><div style="font-size:0.85rem;font-weight:600;color:var(--text);">Home</div><div style="color:var(--text-muted);font-size:0.7rem;margin-top:0.4rem;">Public route — accessible to everyone</div></div>`,
+    dashboard: currentUser ? `<div class="user-card"><div class="uc-avatar">◈</div><div class="uc-name">Dashboard</div><div class="uc-role">Welcome, ${currentUser.name}</div><div class="uc-meta">Role: ${currentUser.role.toUpperCase()}<br>${currentUser.email}</div></div>` : '',
+    profile: currentUser ? `<div class="user-card"><div class="uc-avatar">◉</div><div class="uc-name">${currentUser.name}</div><div class="uc-role">${currentUser.email}</div><div class="uc-meta">Token: ${jwtToken}...</div></div>` : '',
+    admin: `<div class="user-card" style="border-color:rgba(201,168,76,0.25);background:rgba(201,168,76,0.04);"><div class="uc-avatar">⚙</div><div class="uc-name" style="color:var(--gold);">Admin Panel</div><div class="uc-role">Users · Logs · Config</div><div class="uc-meta">Admin role only</div></div>`,
+  };
+  appPage.innerHTML = pages[page] || '';
+}
+</script>
+</body>
+</html>

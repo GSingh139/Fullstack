@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exp 3.1.3 — RBAC System</title>
+<link rel="stylesheet" href="../lab.css">
+<style>
+  /* Role Tabs */
+  .role-tabs {
+    display: flex;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+
+  .role-tab {
+    flex: 1;
+    padding: 0.65rem 1rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-align: center;
+    background: var(--bg-card);
+    color: var(--text-muted);
+    transition: all 0.2s;
+    border: none;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .role-tab:hover { background: #181508; color: var(--text); }
+
+  .role-tab.active.admin   { background: rgba(248,113,113,0.1); color: #f87171; }
+  .role-tab.active.manager { background: rgba(251,191,36,0.1);  color: #fbbf24; }
+  .role-tab.active.user    { background: rgba(74,222,128,0.1);  color: var(--success); }
+
+  .role-desc {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    padding: 0.75rem;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+
+  /* Permission Grid */
+  .active-role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.8rem;
+    border-radius: 2px;
+    margin-bottom: 1rem;
+  }
+
+  .perm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .perm-card {
+    background: var(--bg-card);
+    padding: 1rem;
+    transition: background 0.2s;
+    position: relative;
+  }
+
+  .perm-card.allowed {
+    background: rgba(74,222,128,0.04);
+  }
+
+  .perm-card.denied {
+    opacity: 0.4;
+  }
+
+  .perm-icon { font-size: 1.2rem; margin-bottom: 0.5rem; }
+
+  .perm-name {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.3rem;
+  }
+
+  .perm-status {
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .allowed .perm-status { color: var(--success); }
+  .denied  .perm-status { color: var(--error); }
+
+  /* Matrix */
+  .rbac-matrix {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.72rem;
+  }
+
+  .rbac-matrix th {
+    color: var(--text-muted);
+    padding: 0.55rem 0.85rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 0.62rem;
+  }
+
+  .rbac-matrix td {
+    padding: 0.65rem 0.85rem;
+    border-bottom: 1px solid rgba(201,168,76,0.06);
+    color: var(--text-muted);
+  }
+
+  .rbac-matrix tr:last-child td { border-bottom: none; }
+  .rbac-matrix tr:hover td { background: rgba(255,255,255,0.015); }
+
+  .rbac-matrix td:first-child { color: var(--text); }
+
+  .check { color: var(--success); font-size: 0.9rem; }
+  .cross { color: var(--text-dim); font-size: 0.75rem; }
+</style>
+</head>
+<body>
+<div class="lab-container">
+  <a href="../index.html" class="back-btn">← Hub</a>
+
+  <div class="lab-header">
+    <div class="exp-badge">Exp 3.1.3</div>
+    <h1>Role-Based Access Control</h1>
+    <p>React Context · Express Middleware · Dynamic UI Permissions</p>
+  </div>
+
+  <!-- Role Switcher -->
+  <div class="lab-card">
+    <div class="card-title">Switch Active Role</div>
+    <div class="role-tabs">
+      <button class="role-tab admin active" id="tab-admin" onclick="switchRole('admin')">Admin</button>
+      <button class="role-tab manager" id="tab-manager" onclick="switchRole('manager')">Manager</button>
+      <button class="role-tab user" id="tab-user" onclick="switchRole('user')">User</button>
+    </div>
+    <div class="role-desc" id="roleDesc"></div>
+  </div>
+
+  <!-- Permission Grid -->
+  <div class="lab-card">
+    <div class="card-title">Dynamic UI — Permissions View</div>
+    <div id="activeBadge"></div>
+    <div class="perm-grid" id="permGrid"></div>
+  </div>
+
+  <!-- Matrix -->
+  <div class="lab-card">
+    <div class="card-title">Permission Matrix</div>
+    <table class="rbac-matrix">
+      <thead>
+        <tr>
+          <th>Action</th>
+          <th style="color:#f87171">Admin</th>
+          <th style="color:#fbbf24">Manager</th>
+          <th style="color:var(--success)">User</th>
+        </tr>
+      </thead>
+      <tbody id="matrixBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const ROLES = {
+  admin: {
+    label:'Administrator', color:'#f87171', bg:'rgba(248,113,113,0.1)', border:'rgba(248,113,113,0.3)',
+    desc:'Full system access — manage users, view reports, configure system settings, audit logs.',
+    perms:['View Dashboard','Manage Users','Edit Content','View Reports','Delete Records','System Config','API Access','Audit Logs']
+  },
+  manager: {
+    label:'Manager', color:'#fbbf24', bg:'rgba(251,191,36,0.1)', border:'rgba(251,191,36,0.3)',
+    desc:'Can view reports and edit content. Cannot manage users or access system configuration.',
+    perms:['View Dashboard','Edit Content','View Reports','API Access']
+  },
+  user: {
+    label:'Standard User', color:'#4ade80', bg:'rgba(74,222,128,0.1)', border:'rgba(74,222,128,0.3)',
+    desc:'Basic access only. Can view the dashboard and manage their own profile.',
+    perms:['View Dashboard']
+  }
+};
+
+const ALL_PERMS = [
+  { name:'View Dashboard', icon:'◈' },
+  { name:'Manage Users',   icon:'◉' },
+  { name:'Edit Content',   icon:'✎' },
+  { name:'View Reports',   icon:'⊞' },
+  { name:'Delete Records', icon:'⊠' },
+  { name:'System Config',  icon:'⚙' },
+  { name:'API Access',     icon:'⌁' },
+  { name:'Audit Logs',     icon:'≡' },
+];
+
+const MATRIX = [
+  ['View Dashboard', true, true, true],
+  ['Manage Users',   true, false, false],
+  ['Edit Content',   true, true, false],
+  ['View Reports',   true, true, false],
+  ['Delete Records', true, false, false],
+  ['System Config',  true, false, false],
+  ['API Access',     true, true, false],
+  ['Audit Logs',     true, false, false],
+];
+
+let currentRole = 'admin';
+
+function switchRole(role) {
+  currentRole = role;
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-'+role).classList.add('active');
+
+  const r = ROLES[role];
+  document.getElementById('roleDesc').textContent = r.desc;
+  renderPermGrid(role);
+  renderMatrix();
+}
+
+function renderPermGrid(role) {
+  const r = ROLES[role];
+  document.getElementById('activeBadge').innerHTML =
+    `<div class="active-role-badge" style="background:${r.bg};color:${r.color};border:1px solid ${r.border};">
+      Active: ${r.label}
+    </div>`;
+  document.getElementById('permGrid').innerHTML = ALL_PERMS.map(p => {
+    const allowed = r.perms.includes(p.name);
+    return `<div class="perm-card ${allowed ? 'allowed' : 'denied'}">
+      <div class="perm-icon">${p.icon}</div>
+      <div class="perm-name">${p.name}</div>
+      <div class="perm-status">${allowed ? '✓ Allowed' : '✕ Denied'}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderMatrix() {
+  document.getElementById('matrixBody').innerHTML = MATRIX.map(r => {
+    const cells = r.slice(1).map(v =>
+      `<td style="text-align:center">${v ? '<span class="check">✓</span>' : '<span class="cross">—</span>'}</td>`
+    ).join('');
+    return `<tr><td>${r[0]}</td>${cells}</tr>`;
+  }).join('');
+}
+
+switchRole('admin');
+</script>
+</body>
+</html>

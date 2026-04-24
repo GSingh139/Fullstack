@@ -1,0 +1,185 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+
+:root {
+    --gold: #c9a84c;
+    --gold-bright: #f0c96b;
+    --gold-dim: rgba(201,168,76,0.12);
+    --bg: #0e0d0b;
+    --bg-card: #131209;
+    --bg-sidebar: #0b0a07;
+    --border: rgba(201,168,76,0.16);
+    --border-hover: rgba(201,168,76,0.5);
+    --text: #e8e0d0;
+    --text-muted: #7a7060;
+    --text-dim: #3a3428;
+    --success: #4ade80;
+    --error: #f87171;
+    --warn: #fbbf24;
+    --info: #38bdf8;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ─── Lab Container ─── */
+.lab-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* ─── Back Button ─── */
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border);
+    padding: 0.38rem 0.8rem;
+    border-radius: 2px;
+    transition: all 0.2s;
+}
+.back-btn:hover { color: var(--gold); border-color: var(--border-hover); }
+
+/* ─── Lab Header ─── */
+.lab-header {
+    padding-left: 1.25rem;
+    border-left: 2px solid var(--gold);
+    margin-bottom: 2.5rem;
+}
+
+.exp-badge {
+    display: inline-block;
+    font-size: 0.6rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--border);
+    padding: 0.25rem 0.65rem;
+    border-radius: 2px;
+    margin-bottom: 0.75rem;
+    background: var(--gold-dim);
+}
+
+.lab-header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 0.4rem;
+    line-height: 1.1;
+}
+
+.lab-header p {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+}
+
+/* ─── Lab Card ─── */
+.lab-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.lab-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+    opacity: 0.4;
+}
+
+.card-title {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+/* ─── Inputs ─── */
+.lab-input {
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.6rem 0.8rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    border-radius: 2px;
+    transition: border-color 0.2s;
+    outline: none;
+}
+.lab-input:focus { border-color: var(--border-hover); }
+.lab-input::placeholder { color: var(--text-dim); }
+
+/* ─── Buttons ─── */
+.lab-btn {
+    background: var(--gold-dim);
+    border: 1px solid var(--border-hover);
+    color: var(--gold);
+    padding: 0.55rem 1.1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+}
+.lab-btn:hover { background: rgba(201,168,76,0.22); }
+.lab-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ─── Console ─── */
+.console {
+    background: #050403;
+    border: 1px solid rgba(201,168,76,0.1);
+    border-radius: 3px;
+    padding: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--success);
+    height: 180px;
+    overflow-y: auto;
+}
+
+.console .line { margin-bottom: 0.2rem; line-height: 1.5; }
+.console .timestamp { color: var(--text-dim); margin-right: 0.5rem; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
